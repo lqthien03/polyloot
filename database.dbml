@@ -1,0 +1,492 @@
+Project "polyloot.vn"{
+    database_type: 'Mysql'
+    note: "Databases PolyLoot.vn"
+}
+
+
+Table roles {
+    id bigint [pk, increment]
+    name varchar(225)
+    guard_name varchar(225)
+    created_at timestamp
+    updated_at timestamp
+}
+
+
+Table model_has_roles {
+    role_id bigint [ref: > roles.id]
+    model_type varchar(225)
+    model_id int
+}
+
+Table permissions {
+    id bigint [pk, increment]
+    name varchar(225)
+    guard_name varchar(225)
+    created_at timestamp
+    updated_at timestamp
+}
+
+Table model_has_permissions {
+    permission_id bigint [ref: > permissions.id]
+    model_type varchar(225)
+    model_id int
+}
+
+Table role_has_permissions {
+    permission_id bigint [ref: > permissions.id]
+    role_id bigint [ref: > roles.id]
+}
+
+
+Table settings {
+    id int [pk, increment]
+    key varchar(225) [unique]
+    value text [default: null]
+}
+
+
+Table campuses {
+    id int [pk, increment]
+    parent_id int [ref: > campuses.id, default: null, note: "Nested set model"]
+    name varchar(255) [unique]
+    slug varchar(225) [unique]
+    address varchar(255) [default: null]
+    map_url varchar(225) [default: null]
+    description varchar(225) [default: null]
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [default: null]
+}
+
+
+Table majors {
+    id int [pk, increment]
+    parent_id int [ref: > majors.id, default: null, note: "Nested set model"]
+    name varchar(225) [unique]
+    slug varchar(225) [unique]
+    description varchar(225) [default: null]
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [default: null]
+}
+
+
+Enum AccountStatus {
+    ACTIVE
+    PENDING
+    DEACTIVATED
+    SUSPENDED
+}
+
+
+Table users {
+    id int [pk, increment]
+    name varchar(100)
+    email varchar(225) [unique]
+    phone char(15) [unique]
+    avatar varchar(225) [default: null]
+    balance decimal(13,2) [default: 0]
+    phone_verified_at timestamp [default: null]
+    password varchar(225) [default: null]
+    status AccountStatus [default: 'PENDING']
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [default: null]
+}
+
+
+Table social_accounts {
+    id int [pk, increment]
+    user_id int [ref: > users.id]
+    provider varchar(225) [unique]
+    provider_id varchar(225) [unique]
+    avatar varchar(225) [default: null]
+    created_at timestamp
+    updated_at timestamp
+}
+
+Table user_profiles {
+    id int [pk, increment]
+    user_id int [ref: > users.id]
+    campus_id int [ref: > campuses.id]
+    major_id int [ref: > majors.id]
+    student_code char(20) [unique]
+    bio varchar(225) [default: null]
+    created_at timestamp
+    updated_at timestamp
+}
+
+
+Table shops {
+    id int [pk, increment]
+    user_id int [ref: > users.id]
+    name varchar(225) [unique]
+    slug varchar(225) [unique]
+    phone char(15)
+    cover varchar(225) [default: null]
+    description text [default: null]
+    status AccountStatus [default: 'PENDING']
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [default: null]
+}
+
+
+Table addresses {
+    id int [pk, increment]
+    addressable_type varchar(225)
+    addressable_id int
+    country varchar(225)
+    street varchar(255) [default: null]
+    ward varchar(225) [default: null]
+    district varchar(225) [default: null]
+    city varchar(225)
+    zip_code varchar(225) [default: null]
+}
+
+
+enum PackageType {
+    REGULAR
+    SHOP
+}
+
+enum PaymentStatus{
+    Pending
+    Completed
+    Failed
+}
+
+Table packages {
+    id int [pk, increment]
+    name varchar(225) [unique]
+    package_type PackageType
+    max_listings unsignedint
+    days unsignedint [default: 30, note: "Tính theo ngày"]
+    price decimal(13,2)
+    description text [default: null]
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [default: null]
+}
+
+
+Table model_packages {
+    id int [pk, increment]
+    model_type varchar(255) [note: "User or Shop"]
+    model_id int [note: "Id of User or Shop"]
+    package_id int [ref: > packages.id]
+    amount decimal(13,2)
+    listings_used unsignedint  [default: 0]
+    started_at datetime
+    ended_at datetime
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [default: null]
+}
+
+
+Table extension_packages {
+    id int [pk, increment]
+    package_type PackageType
+    from_quantity unsignedint
+    to_quantity unsignedint [default: null, note: "null nếu số lượng không giới hạn"]
+    price_per_listing decimal(13,2)
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [default: null]
+}
+
+Table model_extension_packages {
+    id int [pk, increment]
+    extension_package_id int [ref: > extension_packages.id]
+    quantity unsignedint [note: "Số lượng tin mua thêm"]
+    amount decimal(13,2)
+    started_at datetime
+    ended_at datetime
+    payment_status PaymentStatus [default: 'Pending']
+    model_type varchar(255) [note: "User or Shop"]
+    model_id int [note: "Id of User or Shop"]
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [default: null]
+}
+
+
+enum PaymentMethodType {
+    MOMO
+    BANK
+}
+
+
+Table payment_methods {
+    id int [pk, increment]
+    type PaymentMethodType
+    name varchar(225) [unique]
+    description varchar(225) [default: null]
+    is_active bool [default: true]
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [default: null]
+}
+
+Table payment_accounts {
+    id int [pk, increment]
+    payment_method_id int [ref: > payment_methods.id]
+    account_name varchar(225)
+    account_number varchar(225)
+    is_active bool [default: true]
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [default: null]
+
+}
+
+Table payments {
+    id int [pk, increment]
+    payment_account_id int [ref: > payment_accounts.id]
+    user_id int [ref: > users.id]
+    payment_code char(36) [unique]
+    currency char(3) [default: null]
+    amount decimal(13,2)
+    transaction_id varchar(225) [default: null]
+    status PaymentStatus [default: 'Pending']
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [default: null]
+}
+
+Table categories {
+    id int [pk, increment]
+    parent_id int [ref: > categories.id, default: null, note: "Nested set model"]
+    name varchar(225) [unique]
+    cover varchar(225) [default: null]
+    description varchar(225) [default: null]
+    is_active bool [default: true]
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [default: null]
+}
+
+
+// enum InputType{
+//     text
+//     textarea
+//     select
+//     checkbox
+//     radio
+//     file
+// }
+
+// Table attributes  {
+//     id bigint [pk, increment]
+//     name varchar(225)
+//     field_name varchar(225) [unique]
+//     input_type InputType
+//     default_value varchar(225) [default: null]
+//     is_required bool [default: false]
+//     is_filterable bool [default: false]
+//     updated_at timestamp
+//     created_at timestamp
+//     deleted_at timestamp [default: null]
+// }
+
+
+// Table attribute_options {
+//     id bigint [pk, increment]
+//     attribute_id bigint [ref: > attributes.id]
+//     label varchar(225)
+//     value varchar(225)
+//     created_at timestamp
+//     updated_at timestamp
+// }
+
+
+// Table category_attributes {
+//     category_id int [ref: > categories.id]
+//     attribute_id int [ref: > attributes.id]
+//     created_at timestamp
+//     updated_at timestamp
+// }
+
+
+// Table attribute_values {
+//     id bigint [pk, increment]
+//     attribute_id bigint [ref: > attributes.id]
+//     value varchar(225)
+//     created_at timestamp
+//     updated_at timestamp
+// }
+
+
+
+Table products {
+    id bigint [pk, increment]
+    category_id int [ref: > categories.id]
+    price decimal(13,2)
+    is_free bool [default: false]
+    created_at timestamp
+    updated_at timestamp
+}
+
+
+
+enum ListingStatus {
+    Pending
+    Inactive
+    Active
+    Sold
+    Expired
+    Deleted
+}
+
+
+Table listings{
+    id int [pk, increment]
+    product_id int [pk, increment]
+    listingable_type varchar(225) [note: "morphs"]
+    listingable_id unsignedbigint [note: "morphs"]
+    title varchar(225)
+    description varchar(225)
+    is_featured bool [default: false]
+    expiration_at datetime
+    status ListingStatus [default: 'Pending']
+    created_at timestamp
+    updated_at timestamp
+    deleted_at timestamp [default: null]
+}
+
+// Table product_attributes{
+//     product_id bigint [ref: > products.id]
+//     value_id bigint [ref: > attribute_values.id]
+//     option_id bigint [ref: > attribute_options.id, default: null]
+//     created_at timestamp
+//     updated_at timestamp
+// }
+
+// enum MediaType {
+//     IMAGE
+//     VIDEO
+// }
+
+
+// Table product_media {
+//     id int [pk, increment]
+//     product_id int [ref: > products.id]
+//     media_type MediaType
+//     path varchar(225)
+//     created_at timestamp
+// }
+
+
+
+// enum NotificationType {
+//     REPORT_SUBMITTED       // Khi có một báo cáo được gửi về một tin đăng hoặc người dùng
+//     REPORT_REVIEWED    // Khi báo cáo đã được xem xét bởi quản trị viên
+//     REPORT_VIOLATION       // Khi một tin đăng vi phạm các quy định của trang web
+//     LISTING_APPROVED       // Khi một tin đăng mới được chấp thuận
+//     LISTING_DECLINED       // Khi một tin đăng không được chấp thuận
+//     LISTING_REPORTED       // Khi một tin đăng bị báo cáo
+//     LISTING_EXPIRING_SOON  // Khi một tin đăng sắp hết hạn
+//     LISTING_EXPIRED         // Khi một tin đăng đã hết hạn
+//     NEW_EVENT                     // Có sự kiện mới hoặc thông báo từ trang web
+//     SYSTEM_UPDATE             // Cập nhật tính năng mới hoặc thay đổi trên trang web
+//     ACCOUNT_WARNING         // Khi tài khoản của người dùng gặp vấn đề hoặc có hành vi không phù hợp
+//     NEW_MESSAGE                 // Khi có tin nhắn mới từ một người dùng khác
+//     TRANSACTION_SUCCESS // Khi một giao dịch mua bán hoặc trao đổi đã hoàn thành thành công
+//     TRANSACTION_FAILED   // Khi có vấn đề với giao dịch
+//     NEW_FOLLOWER               // Nếu trang web của bạn có tính năng theo dõi
+//     REVIEW_RECEIVED         // Khi một người dùng nhận được đánh giá hoặc phản hồi từ người khác sau giao dịch
+//     ACCOUNT_VERIFIED       // Khi tài khoản của người dùng đã được xác minh hoặc phê duyệt
+//     CUSTOM                           // Thông báo tùy chỉnh từ quản trị viên hoặc hệ thống
+// }
+
+// Table notifications {
+//     id bigint [pk, increment]
+//     type varchar(225)
+//     notifiable_type varchar(225) [note: "morphs"]
+//     notifiable_id unsignedbigint [note: "morphs"]
+//     data text
+//     read_at timestamp [default: null]
+//     created_at timestamp
+//     updated_at timestamp
+// }
+
+// enum ReportStatus {
+//     PENDING
+//     REVIEWED
+//     ACTION_TAKEN
+//     DISMISSED
+// }
+
+// enum ActionReportStatus {
+//     NONE
+//     WARNING
+//     DELETED
+//     BLOCKED
+// }
+
+
+// Table reports {
+//     id bigint [pk, increment]
+//     user_id int [ref: > users.id]
+//     reportable_type varchar(225)
+//     reportable_id int
+//     content varchar(225)
+//     status ReportStatus [default: 'PENDING']
+//     resolved_at timestamp [default: null]
+//     created_at timestamp
+//     updated_at timestamp
+// }
+
+
+// Table report_actions {
+//     id bigint [pk, increment]
+//     report_id bigint [ref: > reports.id]
+//     action_by int [ref: > users.id]
+//     action ActionReportStatus
+//     reason text [note: "Lý do"]
+//     created_at timestamp
+//     updated_at timestamp
+// }
+
+
+// enum ReviewType {
+//     BUYER
+//     SELLER
+// }
+
+// Table review_templates {
+//     id int [pk, increment]
+//     content varchar(225)
+//     type ReviewType
+//     rating tinyint [note: "1 -> 5"]
+//     created_at timestamp
+//     updated_at timestamp
+// }
+
+
+// enum ReviewStatus {
+//     PENDING
+//     APPROVED
+//     HIDDEN
+// }
+
+
+// Table reviews {
+//     id int [pk, increment]
+//     user_id int [ref: > users.id]
+//     listing_id int [ref: > listings.id]
+//     rating tinyint [note: "1 -> 5"]
+//     content varchar(225) [default: null]
+//     status ReviewStatus [default: "PENDING"]
+//     created_at timestamp
+//     updated_at timestamp
+//     deleted_at timestamp
+// }
+
+// Table review_to_template {
+//     review_id int [ref: > reviews.id]
+//     template_id int [ref: > review_templates.id]
+// }
+
